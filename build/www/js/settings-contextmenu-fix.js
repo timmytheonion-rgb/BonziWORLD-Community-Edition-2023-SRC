@@ -1,4 +1,15 @@
 (function(){
+  // Inject CSS for crosscolor shadows (applies to multiple possible class names)
+  try{
+    var css = '\n/* Crosscolor shadows */\n.crosscolor:not(.pope),\n.cross-color:not(.pope),\n.cross_color:not(.pope),\n.cross:not(.pope),\n.usercolor:not(.pope),\n.user-color:not(.pope),\n.color-dot:not(.pope),\n.bonzi-color:not(.pope),\n.bonzi-color *:not(.pope) {\n  box-shadow: 0 4px 12px rgba(0,0,0,0.35), 0 0 8px rgba(0,0,0,0.12) inset;\n  transition: box-shadow 160ms ease, filter 160ms ease;\n}\n/* optional subtle colored glow when currentColor is meaningful */\n.crosscolor:not(.pope),\n.cross-color:not(.pope),\n.cross_color:not(.pope),\n.cross:not(.pope),\n.usercolor:not(.pope),\n.user-color:not(.pope),\n.color-dot:not(.pope),\n.bonzi-color:not(.pope) {\n  filter: drop-shadow(0 0 6px rgba(0,0,0,0.18));\n}\n';
+    var s = document.createElement('style');
+    s.type = 'text/css';
+    s.appendChild(document.createTextNode(css));
+    (document.head || document.getElementsByTagName('head')[0]).appendChild(s);
+  }catch(e){}
+})();
+
+(function(){
   function onContext(e){
     e = e || window.event;
     var target = e.target || e.srcElement;
