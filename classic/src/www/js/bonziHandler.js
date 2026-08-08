@@ -4,11 +4,11 @@ var auCtx = new (window.AudioContext || window.webkitAudioContext)();
 // http://stackoverflow.com/a/22953053/2605226
 function webgl_support() { 
    try{
-    var canvas = document.createElement('canvas'); 
-    return !! window.WebGLRenderingContext && ( 
-         canvas.getContext('webgl') || canvas.getContext('experimental-webgl') );
-   }catch( e ) { return false; } 
- };
+     var canvas = document.createElement('canvas'); 
+     return !! window.WebGLRenderingContext && ( 
+          canvas.getContext('webgl') || canvas.getContext('experimental-webgl') );
+    }catch( e ) { return false; } 
+  };
 
 $(document).ready(function() {
 
@@ -140,7 +140,8 @@ window.BonziHandler = new (function() {
 
 	this.speak = function(say, speed, pitch, callback) {
 		var obj = {
-			samples_queue: []
+			samples_queue: [],
+			lipsyncIndex: 0
 		};
 
 		espeak.setVoice.apply(espeak, ["default", "en"]);
@@ -148,7 +149,35 @@ window.BonziHandler = new (function() {
 		espeak.set_pitch(pitch || 50);
 		
 
-		obj.pusher = new PushAudioNode(auCtx, function() {}, callback, callback);
+		obj.pusher = new PushAudioNode(auCtx, function() {
+			// Start lipsync animation when speech begins
+			var keys = Object.keys(bonzis);
+			for (var i = 0; i < keys.length; i++) {
+				var bonzi = bonzis[keys[i]];
+				if (bonzi.sprite) {
+					bonzi.sprite.gotoAndPlay("lipsync0");
+				}
+			}
+		}, function() {
+			// End callback - stop lipsync
+			var keys = Object.keys(bonzis);
+			for (var i = 0; i < keys.length; i++) {
+				var bonzi = bonzis[keys[i]];
+				if (bonzi.sprite) {
+					bonzi.sprite.gotoAndPlay("idle");
+				}
+			}
+			if (callback) callback();
+		}, function() {
+			// Stop callback
+			var keys = Object.keys(bonzis);
+			for (var i = 0; i < keys.length; i++) {
+				var bonzi = bonzis[keys[i]];
+				if (bonzi.sprite) {
+					bonzi.sprite.gotoAndPlay("idle");
+				}
+			}
+		});
 		obj.pusher.connect(auCtx.destination);
 
 		espeak.synth(say, function(samples, events) {
