@@ -72,10 +72,13 @@
       }
       if (eventName === "command") {
         // Force a fresh broadcast so the nametag stays "commanding" even
-        // after the server responds and updateName() runs.
+        // after the server responds and updateName() runs, then clear.
         lastStatus = "";
         window.setTimeout(function () {
           sendStatus("commanding");
+          window.setTimeout(function () {
+            sendStatus("idle");
+          }, 2000);
         }, 0);
       }
       return result;
