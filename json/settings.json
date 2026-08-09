@@ -55,7 +55,7 @@
 				"fune": 3,
 				"ww3": 3,
 				"broadcast": 3,
-				"crosscolor": 3,
+				"crosscolor": 0,
 				"move": 0
 			},
 			"room_max": 1000000,
