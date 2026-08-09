@@ -2,12 +2,28 @@
   "use strict";
 
   var statusText = {
-    typing: " is typing...",
-    speaking: " is speaking...",
-    commanding: " is commanding..."
+    typing: "is typing...",
+    speaking: "is speaking...",
+    commanding: "is commanding..."
   };
   var lastStatus = "";
   var typingTimer;
+
+  // Get (or lazily create) the dedicated status span inside .bonzi_name.
+  // It lives alongside .name-inner, so updateName() never touches it.
+  function getStatusSpan(bonzi) {
+    var $nameWrap = bonzi.$nametag.closest(".bonzi_name");
+    var $span = $nameWrap.find(".bonzi-status-text");
+    if (!$span.length) {
+      $span = $("<span>").addClass("bonzi-status-text").css({
+        display: "block",
+        fontSize: "11px",
+        opacity: "0.85"
+      });
+      $nameWrap.append($span);
+    }
+    return $span;
+  }
 
   function sendStatus(status) {
     if (!window.bonzisocket || status === lastStatus) return;
@@ -19,17 +35,17 @@
     var bonzi = window.bonzis && window.bonzis[data.guid];
     if (!bonzi) return;
 
+    var $span = getStatusSpan(bonzi);
+
     if (data.status === "idle") {
-      bonzi.updateName();
+      $span.text("");
       return;
     }
 
-    var suffix = statusText[data.status];
-    if (!suffix) return;
+    var text = statusText[data.status];
+    if (!text) return;
 
-    // Show status appended to name in the nametag; leave the speech bubble alone.
-    var rawName = (bonzi.userPublic && bonzi.userPublic.name) ? bonzi.userPublic.name : "BonziBUDDY";
-    bonzi.$nametag.text(rawName + suffix);
+    $span.text(text);
   }
 
   function bind() {
@@ -59,8 +75,8 @@
 
     window.bonzisocket.on("status", showStatus);
 
-    // Wrap sendToServer so command actions (context menu, buttons) also
-    // trigger the right status.
+    // Wrap sendToServer so button/context-menu/drag commands also trigger
+    // the right status.
     var sendToServer = window.bonzisocket.sendToServer;
     window.bonzisocket.sendToServer = function (eventName, data) {
       if (eventName === "talk" || eventName === "command") {
@@ -71,8 +87,13 @@
         window.setTimeout(function () { sendStatus("idle"); }, 0);
       }
       if (eventName === "command") {
-        // Force a fresh broadcast so the nametag stays "commanding" even
-        // after the server responds and updateName() runs, then clear.
+        // Skip movement-only commands — users don't expect a status for those.
+        var moveCommands = ["move", "movestart", "movefinish", "surf", "surfleave"];
+        var cmdName = data && Array.isArray(data.list) ? data.list[0] : null;
+        if (moveCommands.indexOf(cmdName) !== -1) return result;
+
+        // Always show "commanding" and clear after 300 ms.
+        // Reset lastStatus so the broadcast always fires.
         lastStatus = "";
         window.setTimeout(function () {
           sendStatus("commanding");
