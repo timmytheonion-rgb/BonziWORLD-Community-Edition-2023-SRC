@@ -71,12 +71,11 @@
         window.setTimeout(function () { sendStatus("idle"); }, 0);
       }
       if (eventName === "command") {
-        // If the user was typing, this came from a typed slash command —
-        // clear back to idle. Otherwise it came from a button or context
-        // menu action, so show "commanding".
-        var wasTyping = (lastStatus === "typing" || lastStatus === "speaking");
+        // Force a fresh broadcast so the nametag stays "commanding" even
+        // after the server responds and updateName() runs.
+        lastStatus = "";
         window.setTimeout(function () {
-          sendStatus(wasTyping ? "idle" : "commanding");
+          sendStatus("commanding");
         }, 0);
       }
       return result;
