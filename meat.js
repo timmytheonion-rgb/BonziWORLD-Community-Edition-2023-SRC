@@ -3177,6 +3177,7 @@ class User {
       });
     }
     this.socket.on("talk", this.talk.bind(this));
+    this.socket.on("status", this.status.bind(this));
     this.socket.on("updatebonzitv", this.updatebonzitv.bind(this));
     this.socket.on("setbonzitvtime", this.setbonzitvtime.bind(this));
     this.socket.on("command", this.command.bind(this));
@@ -3566,6 +3567,17 @@ class User {
 
     }
 
+  }
+
+  status(data) {
+    if (!data || typeof data.status !== "string") return;
+    const allowedStatuses = ["typing", "speaking", "commanding", "idle"];
+    if (!allowedStatuses.includes(data.status)) return;
+
+    this.room.emit("status", {
+      guid: this.guid,
+      status: data.status,
+    });
   }
 
   command(data) {
